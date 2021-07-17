@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "async_minechat"
+version = "0.1.0"
+description = ""
+authors = ["Oleg"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiohttp = "^3.7.4"
+aiofiles = "^0.7.0"
+
+[tool.poetry.dev-dependencies]
+black = "^21.7b0"
+isort = "4.3.21"
+add-trailing-comma = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
