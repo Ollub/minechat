@@ -10,8 +10,8 @@ def write_log(msg: str) -> None:
         log_file.write(msg)
 
 
-async def tcp_client():
-    reader, writer = await asyncio.open_connection(settings.HOST, settings.PORT)
+async def listen_chat():
+    reader, writer = await asyncio.open_connection(settings.HOST, settings.PORT_OUT)
 
     while True:
         data = await reader.readline()
@@ -24,5 +24,27 @@ async def tcp_client():
     writer.close()
 
 
+async def send_to_chat():
+    reader, writer = await asyncio.open_connection(settings.HOST, settings.PORT_IN)
+
+    # authentication
+    writer.write((settings.TOKEN + "\n").encode())
+
+    while True:
+        msg = input("Enter your message: ")
+        if msg == "exit":
+            break
+        msg += "\n\n"
+        writer.write(msg.encode())
+
+    print("Close the connection")
+    writer.close()
+
+
+async def main():
+    # await listen_chat()
+    await send_to_chat()
+
+
 if __name__ == "__main__":
-    asyncio.run(tcp_client())
+    asyncio.run(main())

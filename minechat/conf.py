@@ -23,8 +23,14 @@ def get_args() -> tp.Dict[str, tp.Any]:
         default=None,
     )
     parser.add_argument(
-        "--port",
-        help="Порт",
+        "--port_out",
+        help="Порт для прослушивания чата",
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--port_in",
+        help="Порт для отправки сообщений в чат",
         required=False,
         default=None,
     )
@@ -35,7 +41,9 @@ class Settings(BaseSettings):
     """App settings."""
 
     HOST: str = ""
-    PORT: int = 5000
+    PORT_OUT: int = 5000
+    PORT_IN: int = 5050
+    TOKEN: str = "8dce7dee-e78a-11eb-8c47-0242ac110002"
     DATETIME_FMT = "%d.%m.%y %H:%M"
     LOG_FILE_NAME = "../log.txt"
 
@@ -50,7 +58,7 @@ class Settings(BaseSettings):
         self.check_configuration()
 
     def check_configuration(self):
-        if not (self.HOST or self.PORT):
+        if not (self.HOST or self.PORT_OUT):
             raise ConfigurationError("host or port not configured")
 
     def populate_with_cli_args(self):
