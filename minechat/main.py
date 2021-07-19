@@ -1,9 +1,11 @@
 import asyncio
 import json
 import logging
+from pathlib import Path
 
 from minechat.conf import settings
 from minechat.log import setup_log
+from minechat.utils import get_token_from_file, save_token_to_file
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ class Client:
     _reader: asyncio.StreamReader
     _writer: asyncio.StreamWriter
     _auth_reader: asyncio.StreamReader
+    _is_authenticated: bool = False
 
     async def connect(self):
         self._reader, _ = await asyncio.open_connection(
@@ -37,8 +40,17 @@ class Client:
         # skip greeting
         msg = await self._auth_reader.readline()
         logger.debug(f"Greeting mgs: {msg.decode()}")
-        msg = settings.TOKEN + "\n"
-        await self._send_msg(msg)
+
+        if self.token:
+            await self._process_authentication()
+        else:
+            await self._register_new_user()
+
+    async def _process_authentication(self) -> None:
+        # msg = await self._auth_reader.readline()
+        # logger.debug(f"Greeting mgs: {msg.decode()}")
+        msg = self.token + "\n"
+        await self._send_msg(msg, drain=True)
 
         logger.debug("Getting authentication result")
         authentication_result = json.loads(await self._auth_reader.readline())
@@ -46,6 +58,26 @@ class Client:
             logger.warning("Provided token is invalid!")
         else:
             logger.info("Successfully authenticated")
+            self._is_authenticated = True
+
+    async def _register_new_user(self):
+        logger.debug("Registering new user")
+
+        logger.debug("Send empty message to skip authentication")
+        await self._send_msg("\n", drain=True)
+        # receive enter nickname message
+        data = await self._auth_reader.readline()
+        logger.debug(f"Message from server: {data.decode()}")
+
+        username = input("Enter your nickname: ")
+        logger.debug(f"Register user: {username}")
+        await self._send_msg(username + "\n", drain=True)
+
+        # receive creation result and save token
+        creation_result = json.loads(await self._auth_reader.readline())
+        logger.debug(f"Creation result: {creation_result}")
+        save_token_to_file(creation_result["account_hash"])
+        logger.info("User created")
 
     async def consume(self):
         while True:
@@ -68,8 +100,15 @@ class Client:
         data = await self._reader.readline()
         return data.decode()
 
-    async def _send_msg(self, msg: str) -> None:
+    async def _send_msg(self, msg: str, drain=False) -> None:
         self._writer.write(msg.encode())
+        if drain:
+            await self._writer.drain()
+
+    @property
+    def token(self) -> str:
+        """Get token from settings or from file."""
+        return settings.TOKEN or get_token_from_file()
 
 
 async def main():
@@ -77,7 +116,7 @@ async def main():
     cli = Client()
     await cli.connect()
     await cli.authenticate()
-    # await cli.consume()
+    # await cli.produce()
     await cli.close()
 
 

@@ -43,7 +43,9 @@ class Settings(BaseSettings):
     HOST: str = ""
     PORT_OUT: int = 5000
     PORT_IN: int = 5050
-    TOKEN: str = "8dce7dee-e78a-11eb-8c47-0242ac110002"
+    # TOKEN: str = "8dce7dee-e78a-11eb-8c47-0242ac110002"
+    TOKEN: str = ""
+    TOKEN_STORAGE_FILE_PATH = ".token"
     DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
     LOG_FILE_NAME = "debug.log"
 
