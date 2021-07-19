@@ -89,6 +89,10 @@ class Client:
             msg = input("Enter your message: ")
             if msg == "exit":
                 break
+            # server interpret new line symbols ('\n')
+            # as end of message
+            # that is why we remove those symbols from message
+            msg = msg.replace("\n", " ")
             msg += "\n\n"
             await self._send_msg(msg)
 
@@ -116,7 +120,7 @@ async def main():
     cli = Client()
     await cli.connect()
     await cli.authenticate()
-    # await cli.produce()
+    await cli.produce()
     await cli.close()
 
 
