@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 
 from minechat.conf import settings
@@ -7,28 +8,44 @@ from minechat.log import setup_log
 logger = logging.getLogger(__name__)
 
 
+class ClientException(Exception):
+    """Minechat client base exception."""
+
+
+class BadTokenException(ClientException):
+    """Invalid token provided exception."""
+
+
 class Client:
     """Minechat client."""
 
     _reader: asyncio.StreamReader
     _writer: asyncio.StreamWriter
+    _auth_reader: asyncio.StreamReader
 
     async def connect(self):
-        self._reader = await self.get_reader()
-        self._writer = await self.get_writer()
-
-    async def get_reader(self) -> asyncio.StreamReader:
-        reader, writer = await asyncio.open_connection(settings.HOST, settings.PORT_OUT)
-        return reader
-
-    async def get_writer(self) -> asyncio.StreamWriter:
-        reader, writer = await asyncio.open_connection(settings.HOST, settings.PORT_IN)
-        return writer
+        self._reader, _ = await asyncio.open_connection(
+            settings.HOST,
+            settings.PORT_OUT,
+        )
+        self._auth_reader, self._writer = await asyncio.open_connection(
+            settings.HOST,
+            settings.PORT_IN,
+        )
 
     async def authenticate(self):
+        # skip greeting
+        msg = await self._auth_reader.readline()
+        logger.debug(f"Greeting mgs: {msg.decode()}")
         msg = settings.TOKEN + "\n"
         await self._send_msg(msg)
-        logger.debug("Authenticated")
+
+        logger.debug("Getting authentication result")
+        authentication_result = json.loads(await self._auth_reader.readline())
+        if authentication_result is None:
+            logger.warning("Provided token is invalid!")
+        else:
+            logger.info("Successfully authenticated")
 
     async def consume(self):
         while True:
@@ -60,7 +77,7 @@ async def main():
     cli = Client()
     await cli.connect()
     await cli.authenticate()
-    await cli.consume()
+    # await cli.consume()
     await cli.close()
 
 

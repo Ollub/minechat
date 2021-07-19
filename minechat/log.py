@@ -20,7 +20,7 @@ logger_config = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "level": "DEBUG",
+            "level": "INFO",
             "formatter": "std_format",
         },
         "file": {
