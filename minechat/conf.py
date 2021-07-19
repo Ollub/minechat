@@ -44,8 +44,8 @@ class Settings(BaseSettings):
     PORT_OUT: int = 5000
     PORT_IN: int = 5050
     TOKEN: str = "8dce7dee-e78a-11eb-8c47-0242ac110002"
-    DATETIME_FMT = "%d.%m.%y %H:%M"
-    LOG_FILE_NAME = "../log.txt"
+    DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+    LOG_FILE_NAME = "debug.log"
 
     class Config:  # noqa: WPS431 nested class
         """Config for settings."""
