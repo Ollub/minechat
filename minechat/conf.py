@@ -11,7 +11,7 @@ class ConfigurationError(Exception):
     """Application configuration error exception."""
 
 
-def get_args() -> tp.Dict[str, tp.Any]:
+def get_cli_args() -> tp.Dict[str, tp.Any]:
     """Config argparse parser and read args."""
     parser = argparse.ArgumentParser(
         description="Скрипт для подключения к подпольному чату",
@@ -32,6 +32,18 @@ def get_args() -> tp.Dict[str, tp.Any]:
         "--port_in",
         help="Порт для отправки сообщений в чат",
         required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--name",
+        help="Имя пользователя",
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--msg",
+        help="Сообщение для отправки",
+        required=True,
         default=None,
     )
     return parser.parse_args().__dict__
@@ -64,11 +76,12 @@ class Settings(BaseSettings):
             raise ConfigurationError("host or port not configured")
 
     def populate_with_cli_args(self):
-        cli_args = get_args()
+        cli_args = get_cli_args()
         for argname, value in cli_args.items():
             if value is None:
                 continue
-            setattr(self, argname.upper(), value)
+            if getattr(self, argname.upper(), None) is not None:
+                setattr(self, argname.upper(), value)
 
 
 settings = Settings()

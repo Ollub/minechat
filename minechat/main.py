@@ -1,9 +1,10 @@
 import asyncio
 import json
 import logging
+import typing as tp
 from pathlib import Path
 
-from minechat.conf import settings
+from minechat.conf import get_cli_args, settings
 from minechat.log import setup_log
 from minechat.utils import get_token_from_file, save_token_to_file
 
@@ -21,10 +22,14 @@ class BadTokenException(ClientException):
 class Client:
     """Minechat client."""
 
+    name: tp.Optional[str]
     _reader: asyncio.StreamReader
     _writer: asyncio.StreamWriter
     _auth_reader: asyncio.StreamReader
     _is_authenticated: bool = False
+
+    def __init__(self, name: tp.Optional[str] = None):
+        self.name = name
 
     async def connect(self):
         self._reader, _ = await asyncio.open_connection(
@@ -50,7 +55,7 @@ class Client:
         # msg = await self._auth_reader.readline()
         # logger.debug(f"Greeting mgs: {msg.decode()}")
         msg = self.token + "\n"
-        await self._send_msg(msg, drain=True)
+        await self.send_msg(msg, drain=True)
 
         logger.debug("Getting authentication result")
         authentication_result = json.loads(await self._auth_reader.readline())
@@ -64,14 +69,14 @@ class Client:
         logger.debug("Registering new user")
 
         logger.debug("Send empty message to skip authentication")
-        await self._send_msg("\n", drain=True)
+        await self.send_msg("\n", drain=True)
         # receive enter nickname message
         data = await self._auth_reader.readline()
         logger.debug(f"Message from server: {data.decode()}")
 
-        username = input("Enter your nickname: ")
+        username = self.name or input("Enter your nickname: ")
         logger.debug(f"Register user: {username}")
-        await self._send_msg(username + "\n", drain=True)
+        await self.send_msg(username + "\n", drain=True)
 
         # receive creation result and save token
         creation_result = json.loads(await self._auth_reader.readline())
@@ -94,7 +99,7 @@ class Client:
             # that is why we remove those symbols from message
             msg = msg.replace("\n", " ")
             msg += "\n\n"
-            await self._send_msg(msg)
+            await self.send_msg(msg)
 
     async def close(self):
         self._writer.close()
@@ -104,10 +109,25 @@ class Client:
         data = await self._reader.readline()
         return data.decode()
 
-    async def _send_msg(self, msg: str, drain=False) -> None:
-        self._writer.write(msg.encode())
+    async def send_msg(self, msg: str, drain=False) -> None:
+        self._writer.write(self._preprocess_msg(msg))
         if drain:
             await self._writer.drain()
+        logger.debug(f"Message sent: {msg}")
+
+    def _preprocess_msg(self, msg: str) -> bytes:
+        """
+        Prepare message for sending to chat.
+
+        Server interpret new line symbols ('\n')
+        as the end of the message
+        that is why we remove those symbols from message.
+
+        Finally we add control symbol `\n\n` to send message.
+        """
+        msg = msg.replace("\n", " ")
+        msg += "\n\n"
+        return msg.encode()
 
     @property
     def token(self) -> str:
@@ -117,10 +137,14 @@ class Client:
 
 async def main():
     setup_log()
-    cli = Client()
+    cli_args = get_cli_args()
+    name: tp.Optional[str] = cli_args["name"]
+    msg: str = cli_args["msg"]
+
+    cli = Client(name=name)
     await cli.connect()
     await cli.authenticate()
-    await cli.produce()
+    await cli.send_msg(msg, drain=True)
     await cli.close()
 
 
