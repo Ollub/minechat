@@ -2,45 +2,69 @@ import asyncio
 import json
 import logging
 import typing as tp
-from pathlib import Path
 
-from minechat.conf import get_cli_args, settings
-from minechat.log import setup_log
+from minechat.conf import settings
 from minechat.utils import get_token_from_file, save_token_to_file
 
 logger = logging.getLogger(__name__)
+
+
+class BaseClientException(Exception):
+    """Base client exception class."""
+
+
+class ClientNotConfigured(BaseClientException):
+    """Client configuration error."""
 
 
 class Client:
     """Minechat client."""
 
     name: tp.Optional[str]
+    host: str
+    port_in: int
+    port_out: int
     _reader: asyncio.StreamReader
     _writer: asyncio.StreamWriter
     _auth_reader: asyncio.StreamReader
     _is_authenticated: bool = False
 
-    def __init__(self, name: tp.Optional[str] = None):
+    def __init__(
+        self,
+        name: tp.Optional[str] = None,
+        host: tp.Optional[str] = None,
+        port_out: tp.Optional[int] = None,
+        port_in: tp.Optional[int] = None,
+    ):
         self.name = name
+        self.host = host or settings.HOST
+        self.port_in = port_in or settings.PORT_IN
+        self.port_out = port_out or settings.PORT_OUT
 
     async def __aenter__(self):
-        """Create connection and authenticate."""
+        """Create connection."""
         await self.connect()
-        await self.authenticate()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Close connection."""
         await self.close()
 
+    def check_configuration(self):
+        if not self.host:
+            raise ClientNotConfigured("Missing host argument data")
+        if not (self.port_in and self.port_out):
+            raise ClientNotConfigured("Missing ports arguments data")
+
     async def connect(self):
+        self.check_configuration()
         self._reader, _ = await asyncio.open_connection(
-            settings.HOST,
-            settings.PORT_OUT,
+            self.host,
+            self.port_out,
         )
         self._auth_reader, self._writer = await asyncio.open_connection(
-            settings.HOST,
-            settings.PORT_IN,
+            self.host,
+            self.port_in,
         )
 
     async def authenticate(self):
@@ -135,17 +159,3 @@ class Client:
     def token(self) -> str:
         """Get token from settings or from file."""
         return settings.TOKEN or get_token_from_file()
-
-
-async def main():
-    setup_log()
-    cli_args = get_cli_args()
-    name: tp.Optional[str] = cli_args["name"]
-    msg: str = cli_args["msg"]
-
-    async with Client(name=name) as client:
-        await client.send_msg(msg, drain=True)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
