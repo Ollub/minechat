@@ -11,14 +11,6 @@ from minechat.utils import get_token_from_file, save_token_to_file
 logger = logging.getLogger(__name__)
 
 
-class ClientException(Exception):
-    """Minechat client base exception."""
-
-
-class BadTokenException(ClientException):
-    """Invalid token provided exception."""
-
-
 class Client:
     """Minechat client."""
 
@@ -30,6 +22,16 @@ class Client:
 
     def __init__(self, name: tp.Optional[str] = None):
         self.name = name
+
+    async def __aenter__(self):
+        """Create connection and authenticate."""
+        await self.connect()
+        await self.authenticate()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Close connection."""
+        await self.close()
 
     async def connect(self):
         self._reader, _ = await asyncio.open_connection(
@@ -141,11 +143,8 @@ async def main():
     name: tp.Optional[str] = cli_args["name"]
     msg: str = cli_args["msg"]
 
-    cli = Client(name=name)
-    await cli.connect()
-    await cli.authenticate()
-    await cli.send_msg(msg, drain=True)
-    await cli.close()
+    async with Client(name=name) as client:
+        await client.send_msg(msg, drain=True)
 
 
 if __name__ == "__main__":
