@@ -6,8 +6,6 @@ authors = ["Oleg"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-aiohttp = "^3.7.4"
-aiofiles = "^0.7.0"
 pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
