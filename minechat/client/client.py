@@ -82,6 +82,9 @@ class BaseTcpClient:
             yield msg
 
     async def send_msg(self, msg: str, drain=True) -> None:
+        await self._send(msg, drain)
+
+    async def _send(self, msg: str, drain=True) -> None:
         self._writer.write(self._preprocess_msg(msg))
         if drain:
             await self._writer.drain()
@@ -116,14 +119,27 @@ class MinechatPublisher(MinechatClient):
     Authentication should be passed before pushing messages to chat.
     """
 
+    is_authenticated: bool = False
+
+    async def send_msg(self, msg: str, drain=True) -> None:
+        if not self.is_authenticated:
+            logger.debug("Trying to send message with unauthenticated client.")
+            raise AuthenticationError(
+                "Client should be authenticated before publishing."
+            )
+
     async def authenticate(self, token: str):
+        if self.is_authenticated:
+            logger.debug("Client already authenticated.")
+            return
+
         # skip greeting
         msg = await self.fetch_msg()
         logger.debug(f"Greeting mgs: {msg}")
 
         logger.debug("Authentication attempt")
         msg = token + "\n"
-        await self.send_msg(msg)
+        await self._send(msg)
         authentication_result = json.loads(await self.fetch_msg())
         logger.debug(f"Authentication result: {authentication_result}")
 
@@ -132,6 +148,7 @@ class MinechatPublisher(MinechatClient):
             logger.warning(error_msg)
             raise AuthenticationError(error_msg)
 
+        self.is_authenticated = True
         logger.info("Successfully authenticated")
 
     async def register(self, username: str) -> str:
@@ -147,14 +164,14 @@ class MinechatPublisher(MinechatClient):
         logger.debug(f"Greeting mgs: {msg}")
 
         logger.debug("Send empty message to skip authentication")
-        await self.send_msg("")
+        await self._send("")
 
         # skip "enter nickname" message
         msg = await self.fetch_msg()
         logger.debug(f"Message from server: {msg}")
 
         logger.debug(f"Registering user: {username}")
-        await self.send_msg(username)
+        await self._send(username)
 
         # receive creation result and extract token from it
         # result = await self.fetch_msg()
