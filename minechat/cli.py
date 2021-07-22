@@ -11,7 +11,7 @@ class BaseCliArguments(BaseModel):
 
 
 class ProducerCliArguments(BaseCliArguments):
-    name: tp.Optional[str]
+    username: tp.Optional[str]
     msg: str
 
 
@@ -48,7 +48,7 @@ def get_base_args() -> BaseCliArguments:
 def configure_producer_parser() -> argparse.ArgumentParser:
     parser = configure_base_parser()
     parser.add_argument(
-        "--name",
+        "--username",
         help="Имя пользователя",
         required=False,
         default=None,

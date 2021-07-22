@@ -13,7 +13,7 @@ async def main():
         host=args.host,
         port_in=args.port_in,
         port_out=args.port_out,
-        name=args.name,
+        username=args.username,
     ) as client:
         await client.authenticate()
         await client.send_msg(args.msg)

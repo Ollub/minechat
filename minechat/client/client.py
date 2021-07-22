@@ -20,7 +20,7 @@ class ClientNotConfigured(BaseClientException):
 class Client:
     """Minechat client."""
 
-    name: tp.Optional[str]
+    username: tp.Optional[str]
     host: str
     port_in: int
     port_out: int
@@ -31,12 +31,12 @@ class Client:
 
     def __init__(
         self,
-        name: tp.Optional[str] = None,
+        username: tp.Optional[str] = None,
         host: tp.Optional[str] = None,
         port_out: tp.Optional[int] = None,
         port_in: tp.Optional[int] = None,
     ):
-        self.name = name
+        self.username = username
         self.host = host or settings.HOST
         self.port_in = port_in or settings.PORT_IN
         self.port_out = port_out or settings.PORT_OUT
@@ -100,7 +100,7 @@ class Client:
         data = await self._auth_reader.readline()
         logger.debug(f"Message from server: {data.decode()}")
 
-        username = self.name or input("Enter your nickname: ")
+        username = self.username or input("Enter your nickname: ")
         logger.debug(f"Register user: {username}")
         await self.send_msg(username + "\n", drain=True)
 
