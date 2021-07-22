@@ -6,12 +6,12 @@ from pydantic import BaseModel
 
 class BaseCliArguments(BaseModel):
     host: tp.Optional[str]
-    port_in: tp.Optional[int]
-    port_out: tp.Optional[int]
+    port: tp.Optional[int]
 
 
 class ProducerCliArguments(BaseCliArguments):
     username: tp.Optional[str]
+    token: tp.Optional[str]
     msg: str
 
 
@@ -26,14 +26,8 @@ def configure_base_parser() -> argparse.ArgumentParser:
         default=None,
     )
     parser.add_argument(
-        "--port_out",
-        help="Порт для прослушивания чата",
-        required=False,
-        default=None,
-    )
-    parser.add_argument(
-        "--port_in",
-        help="Порт для отправки сообщений в чат",
+        "--port",
+        help="Порт",
         required=False,
         default=None,
     )
@@ -50,6 +44,12 @@ def configure_producer_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--username",
         help="Имя пользователя",
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--token",
+        help="Токен, полученый при регистрации в чате",
         required=False,
         default=None,
     )
