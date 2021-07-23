@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import socket
 
 from minechat.cli import get_producer_arguments
 from minechat.client.client import AuthenticationError, MinechatPublisher
@@ -45,6 +46,8 @@ async def main():
         await producer()
     except AuthenticationError as err:
         print(err.error_msg)
+    except socket.gaierror:
+        print("Connection error. Please try to run script later.")
 
 
 if __name__ == "__main__":

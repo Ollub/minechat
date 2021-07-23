@@ -1,7 +1,10 @@
 import asyncio
 import json
 import logging
+import socket
 import typing as tp
+
+from minechat.utils import async_retry
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +61,7 @@ class BaseTcpClient:
             logger.error("Port was not provided for client initialization")
             raise ClientNotConfigured("Port is missing")
 
+    @async_retry(socket.gaierror)
     async def connect(self):
         self.check_configuration()
         self._reader, self._writer = await asyncio.open_connection(
@@ -125,8 +129,9 @@ class MinechatPublisher(MinechatClient):
         if not self.is_authenticated:
             logger.debug("Trying to send message with unauthenticated client.")
             raise AuthenticationError(
-                "Client should be authenticated before publishing."
+                "Client should be authenticated before publishing.",
             )
+        await super().send_msg(msg, drain)
 
     async def authenticate(self, token: str):
         if self.is_authenticated:
