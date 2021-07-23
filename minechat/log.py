@@ -1,5 +1,3 @@
-import logging.config
-
 from minechat.conf import settings
 
 logger_config = {
@@ -37,9 +35,3 @@ logger_config = {
         },
     },
 }
-
-logging.config.dictConfig(logger_config)
-
-
-def setup_log() -> None:
-    """Empty function for importing log config."""

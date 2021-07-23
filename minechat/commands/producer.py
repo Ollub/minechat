@@ -1,11 +1,12 @@
 import asyncio
 import logging
+import logging.config
 import socket
 
 from minechat.cli import get_producer_arguments
 from minechat.client.client import AuthenticationError, MinechatPublisher
 from minechat.conf import settings
-from minechat.log import setup_log
+from minechat.log import logger_config
 from minechat.utils import get_token_from_file, save_token_to_file
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,6 @@ async def producer():
 
     If token not passed new user will be registered.
     """
-    setup_log()
     args = get_producer_arguments()
 
     token = args.token or settings.TOKEN or get_token_from_file()
@@ -42,6 +42,7 @@ async def producer():
 
 
 async def main():
+    logging.config.dictConfig(logger_config)
     try:
         await producer()
     except AuthenticationError as err:
