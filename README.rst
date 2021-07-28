@@ -1,3 +1,8 @@
+
+.. role:: bash(code)
+   :language: bash
+
+
 MINECHAT
 ==============
 
@@ -12,19 +17,24 @@ MINECHAT
 
 * склонировать репозиторий
 * создать виртуальное окружение
-* установить зависимости `$ poetry install`
+* установить зависимости :bash:`$ poetry install`
 * задать переменные окружения (опционально)
 
 **Запуск**:
 
-Cкрипт прослушивания чата ::
+Cкрипт прослушивания чата
 
-`$ python -m minechat.commands.comsumer`
+.. code-block:: bash
+
+  $ python -m minechat.commands.comsumer
+  
 
 
-Cкрипт отправки сообщений в чат ::
+Cкрипт отправки сообщений в чат 
 
-`$ python -m minechat.commands.producer --msg Hello!`
+.. code-block:: bash
+
+  $ python -m minechat.commands.producer --msg Hello!
 
 *для каждого из скриптов доступны аргументы коммандной строки*
 
@@ -36,6 +46,8 @@ Cкрипт отправки сообщений в чат ::
 
 **Аргументы командной строки**:
 
-Для просмотра доступных аргументов выполнить ::
+Для просмотра доступных аргументов выполнить 
 
-`$ python -m {path_to_script} --help`
+.. code-block:: bash
+
+  $ python -m {path_to_script} --help
