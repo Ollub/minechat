@@ -3,8 +3,9 @@ import logging
 import logging.config
 import socket
 
+from minechat import client
 from minechat.cli import get_producer_arguments
-from minechat.client.client import AuthenticationError, MinechatPublisher
+from minechat.client.exceptions import AuthenticationError
 from minechat.conf import settings
 from minechat.log import logger_config
 from minechat.utils import get_token_from_file, save_token_to_file
@@ -26,17 +27,17 @@ async def producer():
         print("Please provide token or username for registration.")
         return
 
-    async with MinechatPublisher(
+    async with client.connect_tcp_socket(
         host=args.host,
         port=args.port or settings.PORT_IN,
-    ) as client:
+    ) as conn:
         if token:
-            await client.authenticate(token)
-            await client.send_msg(args.msg)
+            await client.authenticate(conn, token)
+            await client.send_msg(conn, args.msg)
             print("Message sent")
         else:
-            token = await client.register(args.username)
-            save_token_to_file(token)
+            result = await client.register(conn, args.username)
+            save_token_to_file(result.token)
 
         print("Bye!")
 

@@ -2,8 +2,8 @@ import asyncio
 import datetime as dt
 import logging.config
 
+from minechat import client
 from minechat.cli import get_base_args
-from minechat.client.client import MinechatClient
 from minechat.conf import settings
 from minechat.log import logger_config
 
@@ -17,11 +17,11 @@ async def main():
     logging.config.dictConfig(logger_config)
     args = get_base_args()
 
-    async with MinechatClient(
+    async with client.connect_tcp_socket(
         host=args.host,
         port=args.port or settings.PORT_OUT,
-    ) as client:
-        async for msg in client.listen():
+    ) as conn:
+        async for msg in client.listen_server(conn):
             print(format_msg(msg))
 
 

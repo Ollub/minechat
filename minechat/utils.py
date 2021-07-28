@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import typing as tp
 from functools import wraps
 from pathlib import Path
 
 from minechat.conf import settings
 from minechat.exceptions import RetryException
+
+logger = logging.getLogger()
 
 
 def get_token_from_file() -> str:
@@ -40,6 +43,7 @@ def async_retry(*exceptions, attempts: int = 3, wait_time_seconds: float = 5):
                 except exceptions_list as exc:
                     exception = exc
                     await asyncio.sleep(wait_time_seconds)
+                    logger.debug(f"Retry attempt. Exception: {str(exc)}")
                     continue
                 break
             else:
